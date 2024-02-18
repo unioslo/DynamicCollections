@@ -1,0 +1,925 @@
+﻿<!DOCTYPE>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta content="charset=UTF-8"/>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<title>BItFROST</title>
+
+
+<script src="js/jquery-3.4.1.min.js"></script>
+
+<!-- Bootstrap-->
+<link href="stylesheet/bootstrap.min.css" rel="stylesheet">
+<script src="js/bootstrap.bundle.min.js"></script>
+<!-- summernote-->
+<link href="stylesheet/summernote-bs4.min.css" rel="stylesheet">
+<script src="js/summernote-bs4.min.js"></script>
+<!-- JQUERY UI 
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+-->
+<!-- DIGITAL COLLECTION CSS -->
+<link type="text/css" rel="stylesheet" href="stylesheet/digitalCollection.css"/>
+<!-- toastr -->
+<link href="stylesheet/toastr.min.css" rel="stylesheet"/>
+<script src="js/toastr.min.js"></script>
+<!-- COLLECTION CLASS -->
+<script src="js/collection.js"></script>
+<!-- CONFIGURATION -->
+<script src="curated/curatedList.js"></script>
+<!--UTILITY-->
+<script type="text/javascript" src="js/helpers.js"></script>
+
+</head>
+
+<!----------------------------------------------------------------->
+<body onresize="onPageResize()" >
+
+<div class="container-fluid h-100">
+
+<!--##################TITLE AREA##################-->
+<div class="row" id="header_row">
+<div class="col justify-content-center" id="siteHeader">
+	<!--filled by function fillPageHeader-->
+</div>
+<div class="logos text-center">
+	<div id="siteLogos">
+		<!--filled by function fillPageHeader-->
+	</div>
+	<button type='button' class='btn btn-info btn-sm my-2' onClick="showUpdates();">What's new</button>
+	<button type='button' class='btn btn-info btn-sm my-2' onClick="showInfo();">More Info...</button>	
+</div>
+</div>
+
+<!--##################COMMANDS AREA##################-->
+<div class="row" id="tabs_row">
+	<div class="col tb tba flex-grow-0" id="tb_query" onClick="displayQueryMode()" data-toggle="tooltip" data-placement="top" title="Query Mode"><p class="m-1">QUERY</p></div>
+	<div class="col tb flex-grow-0" id="tb_collection" onClick="displayCollectionMode()" data-toggle="tooltip" data-placement="top" title="Collection Mode"><p class="m-1">COLLECTION</p></div>
+	<div class="col tbx"></div>
+</div>
+
+<div class="row" id="commands_row">
+
+<div class="col px-2 py-1" id="query_panel" style="display:block;">
+	<div class="row mx-0">
+		<div class="col px-1 d-flex align-items-center flex-grow-0">
+		<img src='./media/restore.png' width='30px' height="30px" data-toggle="tooltip" data-placement="right"title="Reset Fields" onClick="resetFields()"/>
+		</div>
+	<form class="m-0">
+	  <div class="form-row">
+		<div class="form-group px-3">
+		<label class="m-0" for="selectAge">Period</label>
+		<select class="form-control" id="selectAge" onchange="updateFilters();">
+		</select>
+		</div>
+		<div class="form-group px-3">
+		<label class="m-0" for="selectMaterial">Material</label>
+		<select class="form-control" id="selectMaterial" onchange="updateFilters();">
+		</select>
+		</div>
+		<div class="form-group px-3">
+		<label class="m-0" for="selectCollection">Museum</label>
+		<select class="form-control" id="selectCollection" onchange="updateFilters();">
+		</select>
+		</div>
+	  </div>
+	  <div class="form-row w100">
+		<div class="form-group px-3" style="width:100%;">
+		<label class="m-0" for="searchString">Search String</label>
+		<input class="form-control" type="text" id="searchString" minlength="3" maxlength="20" size="20" oninput="updateFilters();">
+		</div>
+	  </div>  
+	</form>
+	</div>
+</div>
+
+<div class="col" id="collection_panel" style="display:none;">
+<div class="row" >
+
+	<div class="col-3 py-2">
+		<div class="form-group">
+		<input id="i_collectionName" class="form-control form-control-lg" type="text" placeholder="Collection Name" value="Collection Name" onchange="updateCollectionData();">
+		</div>
+		<div class="form-group">
+		<input id="i_collectionAuthor" class="form-control" type="text" placeholder="Author" value="Author" onchange="updateCollectionData();">
+		</div>
+	</div>
+
+	<div class="col-7 py-1" >
+	  <div class="form-group m-1">
+		<textarea class="form-control" id="i_collectionNotes" rows="7" style="resize:none;" onchange="updateCollectionData();" placeholder="Collection Notes"></textarea>
+	  </div>
+	</div>
+
+	<div class="col-2 align-items-center py-2">
+		<center>
+
+		<div class="dropdown">
+		  <button class="btn btn-warning btn-block dropdown-toggle" type="button" disabled id="bt_curated" data-toggle="dropdown">Curated Collections</button>
+		  <div class="dropdown-menu" id="i_collectionsList">
+
+		  </div>
+		</div>
+
+		<hr/>
+		<button id="bt_loadColl" type='button' class='btn btn-warning btn-block btn-sm' onClick="loadCollJSON()">Load Collection</button>
+		<button id="bt_saveColl" type='button' class='btn btn-warning btn-block btn-sm' onClick="saveCollJSON()">Export Collection</button>
+		<input type="file" id="i_JSON" accept=".json,.JSON,.Json" style="display:none" onchange="getJSON(this.files);"/>
+
+		</center>
+	</div>
+
+</div>
+</div>
+
+<div class="col flex-grow-0 p-2 text-right" style="min-width:15rem;">
+	<div class="m-2">
+	  <h5 class="m-0">
+	  Total Records <span id="num_rec" class="badge badge-dark">0</span></br>
+	  Filtered Records <span id="num_query" class="badge badge-dark">0</span></br>
+	  Collected Records <span id="num_coll" class="badge badge-dark">0</span></br>
+	  </h5>
+	</div>
+	<div class="m-2">
+	<center>
+	<button id="bt_lockColl" type='button' class='btn btn-success btn-lg' style="" onClick="lockCollection(true)" data-toggle="tooltip" data-placement="bottom" title="Lock Collection">&#128275;</button>
+	<button id="bt_unlockColl" type='button' class='btn btn-danger btn-lg' style="display:none" onClick="lockCollection(false)" data-toggle="tooltip" data-placement="bottom" title="Unlock Collection">&#128272;</button>
+	<button id="bt_deleteColl" type='button' class='btn btn-danger btn-lg' onClick="deleteCollection()" data-toggle="tooltip" data-placement="bottom" title="Clear Collection"><img src='./media/delete.png' width='30px'/></button>
+	</center>
+	</div>
+</div>
+
+</div>
+
+<!--##################LISTS AREA##################-->
+<div class="row">
+
+<!--MAIN LIST-->
+<div id="list_col" class="col">
+	<div id="list_area" class="row justify-content-around ">
+	</div>
+</div><!--list col-->
+
+<!--USED FOR SELECTED-->
+<div id="sel_col" class="col-0 overflow-auto">
+	<div id="sel_area" class="row justify-content-around ">
+	</div>
+</div><!--sel col-->
+
+</div>
+<!--##################LIST##################-->
+
+</div>
+
+
+<!--###### MODAL INFO ######-->
+<div class="modal fade" id="infoPanel" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="myLabel">Dynamic Collections</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="siteInfo">
+		
+		<!--filled by function fillPageHeader-->
+		
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!--#########################################################################-->
+
+
+<!--###### MODAL UPDATES ######-->
+<div class="modal fade" id="updatesPanel" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="myLabel">Dynamic Collections</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="siteNews">
+				
+			<!--filled by function fillPageHeader-->
+		
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!--#########################################################################-->
+
+
+<!--###### MODAL EDIT TEXT ######-->
+<div class="modal fade" id="editTextPanel" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="myLabel">Edit Text Block</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+		<div><div id="editText"></div></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+		<button id="bt_overwriteText" type="button" class="btn btn-danger" onclick="">UPDATE</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!--#########################################################################-->
+
+
+</body>
+
+<!------ CONFIGURATION ------>
+<script type="text/javascript" src="js/config.js"></script>
+<!------ CONFIGURATION ------>
+
+
+<script type="text/javascript" charset="utf-8">
+//----------------------------------------------
+SESSION_ID = null;
+ARCHIVE = new Archive();
+COLLECTION = new Collection();
+DISPLAYMODE = "query";
+COLLECTIONLOCKED = false;
+CURRENTSEL = -1;
+STATS = {
+  num_rec : 0,
+  num_query : 0,
+  num_coll : 0,
+};
+MESSAGECHANNEL = null;
+//----------------------------------------------
+
+
+//---------------------------------------------------------------------------------------
+function onPageResize(){
+	var remainingH = window.innerHeight - $('#tabs_row').height() - $('#header_row').height() - $('#commands_row').height() - 2;
+
+	$('#list_col').height(remainingH);
+	$('#sel_col').height(remainingH);
+}
+//---------------------------------------------------------------------------------------
+function showInfo(){
+	$('#infoPanel').modal('show')
+}
+function showUpdates(){
+	$('#updatesPanel').modal('show')
+}
+//---------------------------------------------------------------------------------------
+
+function fillFilters(){
+var SA = document.getElementById("selectAge");
+	for (const age of ageFilterOptions){
+		var option = document.createElement("option");
+		option.text = age;
+		SA.add(option);
+	}
+	var SM = document.getElementById("selectMaterial");
+	for (const material of materialFilterOptions){
+		var option = document.createElement("option");
+		option.text = material;
+		SM.add(option);
+	}
+	var SC = document.getElementById("selectCollection");
+	for (const collection of collectionFilterOptions){
+		var option = document.createElement("option");
+		option.text = collection;
+		SC.add(option);
+	}
+}
+
+function updateFilters(){
+	updateList();
+	CURRENTSEL = -1;
+}
+
+function resetFields(){
+	document.getElementById("selectAge").selectedIndex = 0;
+	document.getElementById("selectMaterial").selectedIndex = 0;
+	document.getElementById("selectCollection").selectedIndex = 0;
+	document.getElementById("searchString").selectedIndex = 0;
+	updateList();
+	CURRENTSEL = -1;
+}
+//---------------------------------------------------------------------------------------
+
+function cardClicked(cardID){
+	var objCode = cardID.slice(5);
+	var oldSel = CURRENTSEL;
+	CURRENTSEL = objCode;
+
+	document.getElementById("sel_col").classList.remove("col-0");
+	document.getElementById("sel_col").classList.add("col-3");
+
+	updateCard(oldSel);
+	updateCard(CURRENTSEL);
+	if(CURRENTSEL==objCode)
+		fillSelected(CURRENTSEL);
+}
+
+//---------------------------------------------------------------------------------------
+
+function displayQueryMode(){
+	if (DISPLAYMODE == "query") return;
+	document.getElementById("tb_query").classList.toggle("tba");
+	document.getElementById("tb_collection").classList.toggle("tba");
+	DISPLAYMODE = "query";
+
+	document.getElementById("query_panel").style.display = "block";
+	document.getElementById("collection_panel").style.display = "none";
+
+	//$("#list_area").sortable("disable");
+
+	CURRENTSEL = -1;
+	updateList();
+}
+
+function displayCollectionMode(){
+	if (DISPLAYMODE == "collection") return;
+	document.getElementById("tb_query").classList.toggle("tba");
+	document.getElementById("tb_collection").classList.toggle("tba");
+	DISPLAYMODE = "collection";
+
+	document.getElementById("query_panel").style.display = "none";
+	document.getElementById("collection_panel").style.display = "block";
+
+	//$("#list_area").sortable("enable");
+
+	CURRENTSEL = -1;
+	updateList();
+}
+
+//---------------------------------------------------------------------------------------
+function viewObject(objCode){
+	// store collection
+	if(DISPLAYMODE == "collection"){
+		localStorage.setItem("DC_COLLECTION",JSON.stringify(COLLECTION));
+	}
+	var newUrl = "./single_viewer.html";
+	newUrl += "?obj="+objCode;
+	if(DISPLAYMODE == "collection"){
+		newUrl += "&coll=true";
+	}
+	window.open(newUrl, "_blank");
+}
+
+function collectObject(objCode,state){
+	if(COLLECTIONLOCKED){toastr.error('Collection locked'); return;}
+
+	if ((COLLECTION.hasObjectNotes(objCode))||(COLLECTION.hasObjectAnnotations(objCode)))
+		if(!confirm('Remove from Collection? Object has notes/annotations')) return;
+
+	ARCHIVE.objects[objCode].collected = state;
+
+	if(state){
+		STATS.num_coll++;
+
+		updateCard(objCode);
+		if(CURRENTSEL==objCode)
+			fillSelected(CURRENTSEL);
+		
+		// add empty entry in collection
+		COLLECTION.objects[objCode] = {};
+	}
+	else{
+			
+		STATS.num_coll--;
+
+		if(DISPLAYMODE == "query"){
+			updateCard(objCode);
+			if(CURRENTSEL==objCode)
+				fillSelected(CURRENTSEL);
+		}
+		else{
+			var cardID = "card_" + objCode;
+			$(".tooltip").tooltip("hide");
+			document.getElementById(cardID).remove();
+			if(CURRENTSEL==objCode){
+				if(document.getElementById("selectedCard"))
+					document.getElementById("selectedCard").remove();
+				document.getElementById("sel_col").classList.remove("col-3");
+				document.getElementById("sel_col").classList.add("col-0");
+				CURRENTSEL = -1;
+			}
+		}
+		
+		//delete entry from collection
+		delete COLLECTION.objects[objCode];
+	}
+
+	document.getElementById("num_coll").innerHTML = STATS.num_coll;
+}
+
+
+//---------------------------------------------------------------------------------------
+
+function fillSelected(objCode){
+
+	var target = document.getElementById("sel_area");
+	target.innerHTML = "";
+
+	var thumbnail = getLargeThumb(objCode);
+	
+	var content = "";
+
+	content += `
+	<div id='selectedCard' class='col m-2 bg_card sel_card'>
+	<div class='col p-0 my-1 border text-center align-items-center'>
+	  <img class='' src='${thumbnail}' width='100%' style='object-fit:contain; max-height:512px;'/>
+	<\/div>`;
+	
+	content += `
+	<div class='row p-0 my-2 justify-content-around'>
+	  <button id="bt_viewS_${objCode}" type="button" class="btn btn-primary btn-sm" onClick="arguments[0].stopPropagation();viewObject('${objCode}');">View<\/button>`;
+	
+	if(ARCHIVE.objects[objCode].collected){
+		content += "<button id='bt_decollectS_"+objCode+"'type='button' class='btn btn-danger btn-sm' onClick='arguments[0].stopPropagation();collectObject(\""+objCode+"\",false);'>Collected</button>";
+	}
+	else{
+		content += "<button id='bt_collectS_"+objCode+"'type='button' class='btn btn-primary btn-sm' onClick='arguments[0].stopPropagation();collectObject(\""+objCode+"\",true);'>Collect</button>";
+	}
+	content += "</div>\n";
+
+	// check if I have to show notes
+	var displayNotes = (DISPLAYMODE == "collection")?"block":"none";
+
+	content += `
+	<div class='col p-0 m-0 align-items-left w-100'>
+	<ul class="nav nav-tabs" id="selectedTabs" role="tablist">
+		<li class="nav-item">
+			<a class="nav-link active" id="mTab" data-toggle="tab" href="#selectedMeta" role="tab">Metadata<\/a>
+		<\/li>
+		<li class="nav-item">
+			<a class="nav-link" id="pTab" data-toggle="tab" href="#selectedPara" role="tab">Paradata<\/a>
+		<\/li>
+		<li class="nav-item" style="display:${displayNotes};">
+			<a class="nav-link" id="nTab" data-toggle="tab" href="#selectedNotes" role="tab">Notes<\/a>
+		<\/li>
+	<\/ul>
+	<div class="tab-content" id="selectedTabContent">
+		<div class="tab-pane fade show active" id="selectedMeta" role="tabpanel">
+			<h6>
+			<table border=1 style='width:100%'>
+	`;
+	
+	for(const field of META){
+		var fname = NAMING[field][LANGUAGE];
+		var fval = ARCHIVE.data(objCode,field);
+		if(fval)
+			content += `<tr><td>${fname}<\/td><td> ${fval} <\/td><\/tr>`;
+	}
+			
+	content += `
+			<\/table>
+			<\/h6>
+		<\/div>
+		<div class="tab-pane fade" id="selectedPara" role="tabpanel">
+			<h6>
+			<table border=1 style='width:100%'>
+	`;
+	
+	for(const field of PARA){
+		var fname = NAMING[field][LANGUAGE];
+		var fval = ARCHIVE.data(objCode,field);
+		if(fval)
+			content += `<tr><td>${fname}<\/td><td> ${fval} <\/td><\/tr>`;
+	}	
+	
+	content += `			
+			<\/table>
+			<\/h6>
+		<\/div>
+		<div class="tab-pane fade" id="selectedNotes" role="tabpanel">
+			<h6>
+			<div class="form-group">
+				<textarea class="form-control" id="i_selectedNotes" rows="10" style="resize:none;" onchange="updateObjectNotes('${objCode}', this.value)" placeholder="Object Notes"><\/textarea>
+			<\/div>
+			<\/h6>
+		<\/div>
+	<\/div>
+	<\/div>
+	<\/div>	
+	`;
+
+	content += "</div>\n";
+
+	target.innerHTML = content;
+
+	// fill notes if present and in collection mode, and make it read-only if collection is locked
+	if (DISPLAYMODE == "collection"){
+		if(COLLECTION.objects[objCode].notes)
+			document.getElementById("i_selectedNotes").value = COLLECTION.objects[objCode].notes;
+		if(COLLECTIONLOCKED)
+			document.getElementById("i_selectedNotes").readOnly = true;
+	}
+
+	if(ARCHIVE.objects[objCode].collected){
+		document.getElementById("selectedCard").classList.remove("bg_card");
+		document.getElementById("selectedCard").classList.add("bg_card_col");
+	}
+
+}
+
+//---------------------------------------------------------------------------------------
+
+function updateList(){
+	$(".tooltip").tooltip("hide");
+	var filterAge = ageFilterOptions[document.getElementById("selectAge").selectedIndex];
+	var filterMaterial = materialFilterOptions[document.getElementById("selectMaterial").selectedIndex];
+	var filterCollection = collectionFilterOptions[document.getElementById("selectCollection").selectedIndex];
+	var searchString =  document.getElementById("searchString").value;
+
+	if(DISPLAYMODE == "query"){
+		STATS.num_query=0;	
+		for(objCode in ARCHIVE.objects){
+			var isQueried = true;
+			
+			if((filterAge != "ALL")&&((ARCHIVE.data(objCode,"PERIOD1")).toLowerCase().indexOf(filterAge.toLowerCase()) == -1)) isQueried = false;
+			if((filterMaterial != "ALL")&&((ARCHIVE.data(objCode,"MATERIAL1")).toLowerCase().indexOf(filterMaterial.toLowerCase()) == -1)) isQueried = false;
+			if((filterCollection != "ALL")&&((ARCHIVE.data(objCode,"MUSEUM")).toLowerCase().indexOf(filterCollection.toLowerCase()) == -1)) isQueried = false;
+			if((searchString!="")&& (ARCHIVE.findString(objCode,searchString)==false))
+			 isQueried = false;
+			 
+			if(isQueried) STATS.num_query++;
+			ARCHIVE.objects[objCode].queried = isQueried;
+			ARCHIVE.objects[objCode].selected = false;
+		}
+		document.getElementById("num_query").innerHTML = STATS.num_query;
+	}
+	
+	if(document.getElementById("selectedCard"))
+		document.getElementById("selectedCard").remove();
+	document.getElementById("sel_col").classList.remove("col-3");
+	document.getElementById("sel_col").classList.add("col-0");
+
+	var target = document.getElementById("list_area");
+	newContent = "";
+
+	for(objCode in ARCHIVE.objects){
+		if(((DISPLAYMODE == "collection")&&(ARCHIVE.objects[objCode].collected))||((DISPLAYMODE == "query")&&(ARCHIVE.objects[objCode].queried)))
+			newContent += newCard(objCode);
+	}
+	target.innerHTML = newContent;
+
+	$('[data-toggle="tooltip"]').tooltip({trigger : 'hover'});
+	// resize all components
+	onPageResize();
+}
+
+//-----------------------------------------------------------------
+//-----------------------------------------------------------------
+
+function newCard(objCode){
+	if(objCode==-1) return "";
+
+	var cardID = "card_" + objCode;
+	var cardColor = "";
+	if((ARCHIVE.objects[objCode].collected)&&(objCode == CURRENTSEL)) cardColor = "bg_card_sel_col";
+	else if(objCode == CURRENTSEL) cardColor = "bg_card_sel";
+	else if(ARCHIVE.objects[objCode].collected) cardColor = "bg_card_col";
+	else  cardColor = "bg_card";
+	var displayCOLL = ARCHIVE.objects[objCode].collected ? "none":"block";
+	var displayDECOLL = ARCHIVE.objects[objCode].collected ? "block":"none";
+
+	var thumbnail = getSmallThumb(objCode);
+
+	content = "";
+
+	content += "<div id='" + cardID + "' class='card obj_card m-2 text-center "+cardColor+"' onClick='cardClicked(this.id);' data-toggle='tooltip' data-placement='top' title='" + objCode + "'>";
+	content += "<div class='card-body px-1 py-0'>\n";
+	
+/*
+	content += "<div class='obj_iconshelf'>\n";
+	content += "<img id='"+ objCode + "_icoNotes' class='obj_icon' style='display:none' src='./media/notes.png' title='has notes'/>";
+	content += "<img id='"+ objCode + "_icoAnn' class='obj_icon' style='display:none' src='./media/annotations.png' title='has 3D annotations'/>";
+	content += "</div>\n";
+*/
+	content += "  <img class='obj_thumb my-1' src='"+thumbnail+"' loading='lazy'/>\n";
+	content += "  <div class='cardLine mb-1'>\n";
+	content += "  <h4 class='m-0'>" + ARCHIVE.objects[objCode]["MUSEUM"] + " " + ARCHIVE.objects[objCode]["INVENTORY"] + "</h4>\n";	
+	if(ARCHIVE.data(objCode,"OBJECTNAME")){
+		content += "  <h5 class='m-0'>" + ARCHIVE.data(objCode,"OBJECTNAME") + "</h5>\n";
+	}
+
+	content += "  </div>\n";
+	content += "  <div class='cardLine'>\n";
+	content += "  <h6>\n";
+	content += "<table><tr><td>" + NAMING["MATERIAL1"][LANGUAGE] + "</td><td>" + ARCHIVE.objects[objCode]["MATERIAL1"] + "</td></tr></table>";
+	content += "<table><tr><td>" + NAMING["CATEGORY1"][LANGUAGE] + "</td><td>" + ARCHIVE.objects[objCode]["CATEGORY1"] + "</td></tr></table>";
+	content += "<table><tr><td>" + NAMING["PERIOD1"][LANGUAGE] + "</td><td>" + ARCHIVE.objects[objCode]["PERIOD1"] + "</td></tr></table>";
+	content += "  </h6>\n";
+	content += "  </div>\n";
+	
+	content += "<div class='row m-0 py-1 justify-content-around'>\n";
+	content += "<button id='bt_view_"+objCode+"' type='button' class='btn btn-primary btn-sm' onClick='arguments[0].stopPropagation();viewObject(\""+objCode+"\");' data-toggle='tooltip' data-placement='top' title='3D VIEW'>View</button>";
+	content += "<button id='bt_collect_"+objCode+"'type='button' class='btn btn-primary btn-sm' style='display:"+displayCOLL+";' onClick='arguments[0].stopPropagation();collectObject(\""+objCode+"\",true);' data-toggle='tooltip' data-placement='top' title='ADD TO COLLECTION'>Collect</button>";
+	content += "<button id='bt_decollect_"+objCode+"'type='button' class='btn btn-danger btn-sm' style='display:"+displayDECOLL+";' onClick='arguments[0].stopPropagation();collectObject(\""+objCode+"\",false);' data-toggle='tooltip' data-placement='top' title='REMOVE FROM COLLECTION'>Collected</button>";
+	content += "</div>\n";
+
+	content += "</div>\n";
+
+	content += "</div>\n";
+
+	return content;
+}
+
+function updateCard(objCode){
+	if(objCode==-1)return;
+	var cardID = "card_" + objCode;
+
+	document.getElementById(cardID).classList.remove("bg_card","bg_card_sel","bg_card_col","bg_card_sel_col");
+
+	if((ARCHIVE.objects[objCode].collected)&&(objCode == CURRENTSEL)){
+		document.getElementById(cardID).classList.add("bg_card_sel_col");
+	}
+	else if(objCode == CURRENTSEL){
+		document.getElementById(cardID).classList.add("bg_card_sel");
+	}
+	else if(ARCHIVE.objects[objCode].collected){
+		document.getElementById(cardID).classList.add("bg_card_col");
+	}
+	else{
+		document.getElementById(cardID).classList.add("bg_card");
+	}
+
+	if(ARCHIVE.objects[objCode].collected){
+		document.getElementById("bt_collect_"+objCode).style.display = "none";
+		document.getElementById("bt_decollect_"+objCode).style.display = "block";
+	}
+	else{
+		document.getElementById("bt_collect_"+objCode).style.display = "block";
+		document.getElementById("bt_decollect_"+objCode).style.display = "none";
+	}
+}
+
+
+//-----------------------------------------------------------------
+function lockCollection(state){
+	if(state){
+		COLLECTIONLOCKED = true;
+
+		document.getElementById("i_collectionName").readOnly = true;
+		document.getElementById("i_collectionAuthor").readOnly = true;
+		document.getElementById("i_collectionNotes").readOnly = true;
+
+		if(document.getElementById("i_selectedNotes"))
+			document.getElementById("i_selectedNotes").readOnly = true;
+
+		document.getElementById("bt_lockColl").style.display = "none";
+		document.getElementById("bt_unlockColl").style.display = "inline-block";
+	}
+	else{
+		COLLECTIONLOCKED = false;
+		document.getElementById("i_collectionName").readOnly = false;
+		document.getElementById("i_collectionAuthor").readOnly = false;
+		document.getElementById("i_collectionNotes").readOnly = false;
+		
+		if(document.getElementById("i_selectedNotes"))
+			document.getElementById("i_selectedNotes").readOnly = false;		
+		
+		document.getElementById("bt_lockColl").style.display = "inline-block";
+		document.getElementById("bt_unlockColl").style.display = "none";
+	}
+}
+
+//-----------------------------------------------------------------
+function loadCurated(collName){
+	var collFile = CURATEDLIST[collName].filename;
+    $.getJSON( "./curated/"+collFile, function(readData){
+		COLLECTION = readData;
+		lockCollection(true);
+		populateCollection();
+		toastr.success("Curated Collection \"" + collName + "\" Loaded");
+	});
+}
+
+function loadCollJSON(){
+	document.getElementById("i_JSON").click();
+}
+function getJSON(files){
+	if((files)&&(files.length>0)){
+	    var reader = new FileReader();
+		reader.onload = importJSON;
+		reader.readAsText(event.target.files[0]);
+	}
+}
+function importJSON(event){
+    COLLECTION = JSON.parse(event.target.result);
+	lockCollection(false);
+	populateCollection();
+	toastr.success('Collection Loaded');
+}
+function populateCollection(){
+	document.getElementById("i_collectionName").value = COLLECTION.metadata.name;
+	document.getElementById("i_collectionAuthor").value = COLLECTION.metadata.author;
+	document.getElementById("i_collectionNotes").value = COLLECTION.metadata.notes;
+
+	STATS.num_coll = 0;
+	for(objCode in ARCHIVE.objects){
+		ARCHIVE.objects[objCode].collected = false;
+		if (COLLECTION.objects[objCode] !== undefined){
+			ARCHIVE.objects[objCode].collected = true;
+			STATS.num_coll++;
+		}
+	}
+	document.getElementById("num_coll").innerHTML = STATS.num_coll;
+	CURRENTSEL = -1;
+	updateList();
+}
+
+function updateObjectNotes(objCode, notes){	
+	COLLECTION.objects[objCode].notes = notes;
+}
+
+
+function updateCollectionData(){
+	COLLECTION.header.date = (new Date()).toString();
+	COLLECTION.metadata.name = document.getElementById("i_collectionName").value;
+	COLLECTION.metadata.shortName = "";
+	COLLECTION.metadata.author = document.getElementById("i_collectionAuthor").value;
+	COLLECTION.metadata.link = "";
+	COLLECTION.metadata.notes = document.getElementById("i_collectionNotes").value;
+}
+
+function saveCollJSON(){
+	// escaping
+	if(STATS.num_coll < 1)return;
+	
+	updateCollectionData();
+
+	var element = document.createElement('a');
+	element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(COLLECTION, null, 2)));
+	element.setAttribute('download', "collection.json");
+
+	element.style.display = 'none';
+	document.body.appendChild(element);
+
+	element.click();
+
+	document.body.removeChild(element);
+	toastr.success('Collection Exported');
+}
+
+function deleteCollection(){
+	if(COLLECTIONLOCKED){ toastr.error('Collection locked'); return;}
+	if(STATS.num_coll < 1){ toastr.error('Collection already empty'); return;}
+	if(!confirm('Clear the active collection?')) return;
+	COLLECTION = new Collection();
+	populateCollection();
+	toastr.success('Collection cleared');
+}
+
+function messageReceived(message){
+	//console.log("received!");
+	//console.log(message);
+	
+	if(COLLECTIONLOCKED){ 
+		toastr.error('cannot integrate annotations: collection locked', 'COLLECTION UPDATE', {timeOut:0, extendedTimeOut:0, closeButton:true});
+		return;
+	}
+		
+	if (message.data.session != SESSION_ID) {
+		toastr.error('cannot integrate annotations: wrong session', 'COLLECTION UPDATE', {timeOut:0, extendedTimeOut:0, closeButton:true});		
+		return;
+	}
+	
+	var newAnn = JSON.parse(message.data.annotations);
+	console.log(message);
+	
+	if(COLLECTION.objects[newAnn.objectID]){
+		COLLECTION.objects[newAnn.objectID].notes = newAnn.notes;
+		COLLECTION.objects[newAnn.objectID].views = newAnn.views;
+		COLLECTION.objects[newAnn.objectID].spots = newAnn.spots;
+		COLLECTION.objects[newAnn.objectID].newIndex = newAnn.newIndex;	
+		
+		toastr.success('Added annotations for ' + newAnn.objectID, 'COLLECTION UPDATE', {timeOut:0, extendedTimeOut:0, closeButton:true});
+	}
+	else {
+		toastr.error('cannot integrate annotations: object no longer in collection', 'COLLECTION UPDATE', {timeOut:0, extendedTimeOut:0, closeButton:true});
+		return;	
+	}
+}
+
+//-----------------------------------------------------------------
+function fillPageHeader(){
+	document.getElementById("siteHeader").innerHTML = siteHeader;
+	document.getElementById("siteLogos").innerHTML = siteLogos;
+	document.getElementById("siteInfo").innerHTML = siteInfo;
+	document.getElementById("siteNews").innerHTML = siteNews;
+}
+//-----------------------------------------------------------------
+function fillCuratedInterface(){
+	var content="";
+	content += "<option hidden disabled selected value> ----- </option>\n";
+	for(curated in CURATEDLIST){
+		content += "<a class='dropdown-item' href='#' onClick='loadCurated("+ "\"" + curated + "\"" + ");'>"+ curated +"</a>";
+	}
+	document.getElementById("i_collectionsList").innerHTML = content;
+}
+//---------------------------------------------------------------------------------------
+function initSessionID(){
+	newID = "DC_" + (new Date()).getTime();
+	SESSION_ID = newID;
+	localStorage.setItem("DC_SESSIONID",SESSION_ID);
+}
+//---------------------------------------------------------------------------------------
+$(document).ready(function(){
+
+	// session ID for synchronization between tabs
+	initSessionID();	
+	
+	// message channel to receive updates to collection
+	MESSAGECHANNEL = new BroadcastChannel('collections_channel');
+	MESSAGECHANNEL.onmessage = messageReceived; /* receive */
+	
+	onPageResize();
+	
+	// configuration
+	toastr.options = {
+		"positionClass": "toast-bottom-left",
+		"preventDuplicates": false,
+		"showDuration": "300",
+		"hideDuration": "300",
+		"timeOut": "2000",
+		"extendedTimeOut": "1000"
+	}
+
+	// location-specific info, title, logos
+	fillPageHeader();
+	// curated list
+	fillCuratedInterface();
+	// location-specific filters
+	fillFilters();
+
+	// start tooltips
+	$('[data-toggle="tooltip"]').tooltip({trigger : 'hover'});
+
+	// init editor
+	//$('#i_collectionNotes').summernote();
+	
+	// looking for parameters in webpage address
+	var startColl="";
+	var pageParams = parsePageParams();
+	if(pageParams["coll"])
+	{
+		startColl = decodeURI(pageParams["coll"]);
+	}
+
+	// JSON loading of collection list
+    jQuery.getJSON("./data/" + LISTFILE, function(data){
+		ARCHIVE.objects = data;
+
+		for(objCode in ARCHIVE.objects.objects){
+			ARCHIVE.objects[objCode].queried = false;
+			ARCHIVE.objects[objCode].selected = false;
+			ARCHIVE.objects[objCode].collected = false;
+		}
+
+		STATS.num_rec = Object.keys(ARCHIVE.objects).length;
+		document.getElementById("num_rec").innerHTML = STATS.num_rec;
+
+		if(startColl!=""){
+			if(CURATEDLIST.hasOwnProperty(startColl)){
+				displayCollectionMode();
+				loadCurated(startColl);
+				return;
+			}
+			else{
+				toastr.error("Curated Collection \"" + startColl + "\" does not exist");
+			}
+		}
+
+		updateList();
+	});
+
+/*
+	$( ".card" ).draggable();
+	$( ".card" ).draggable("disable");
+*/
+	/*
+	$("#list_area").sortable();
+	$("#list_area").disableSelection();
+	$("#list_area").sortable("disable");
+	*/
+});
+</script>
+</html>
