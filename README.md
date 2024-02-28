@@ -3,6 +3,7 @@
 
 
 #To Do
+- [ ] UI modifications see card. BItFROST - UI update in Web - 3dhop and bitfrost
 - [ ] add 'zoom to' hotspot behaviour (see autoload template)
 - [ ] add 'next' hotspot feature
 - [ ] add save measurements similar to annotations (e.g. GOM like callipers)
